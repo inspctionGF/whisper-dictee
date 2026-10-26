@@ -14,7 +14,8 @@ $iscc = Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
 if (-not (Test-Path $iscc)) {
     throw "Inno Setup 6 est introuvable. Installez-le, puis relancez ce script."
 }
-& $iscc (Join-Path $PSScriptRoot "installer.iss")
+$version = & $python -c "from version import APP_VERSION; print(APP_VERSION)"
+& $iscc "/DAppVersion=$version" (Join-Path $PSScriptRoot "installer.iss")
 
 Write-Host ""
 Write-Host "Installateur prêt : dist\DicteeLocale-Setup.exe"

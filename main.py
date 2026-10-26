@@ -9,13 +9,16 @@ from __future__ import annotations
 import argparse
 import sys
 
-from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QTimer, QUrl
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QFontDatabase, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from audio import AudioRecorder, mic_name, record_seconds
 from controller import Controller, autostart_enabled, load_settings, save_settings, set_autostart
 from overlay.window import OverlayWindow
 from transcriber import Transcriber, gpu_name, load_model, log, resolve_backend, transcribe_array
+from updates import Release, UpdateChecker
+from version import APP_VERSION
 
 
 def configure_stdio() -> None:
@@ -116,7 +119,7 @@ def run_app(settings: dict) -> None:
     controller = Controller(overlay, recorder, transcriber, settings)
 
     tray = QSystemTrayIcon(tray_icon())
-    tray.setToolTip("Dictée locale — Ctrl+Alt+Espace")
+    tray.setToolTip(f"Dictée locale {APP_VERSION} — Ctrl+Alt+Espace")
     menu = QMenu()
     status = QAction("Chargement du modèle…", menu)
     status.setEnabled(False)
@@ -126,13 +129,16 @@ def run_app(settings: dict) -> None:
     autostart = QAction("Démarrer avec Windows", menu)
     autostart.setCheckable(True)
     autostart.setChecked(autostart_enabled())
+    updates = QAction("Vérifier les mises à jour", menu)
     quit_action = QAction("Quitter", menu)
     menu.addAction(status)
     menu.addSeparator()
     menu.addAction(dark_mode)
     menu.addAction(autostart)
+    menu.addAction(updates)
     menu.addSeparator()
     menu.addAction(quit_action)
+    checker = UpdateChecker()
     tray.setContextMenu(menu)
 
     def mark_ready(model_name: str) -> None:
@@ -145,15 +151,64 @@ def run_app(settings: dict) -> None:
     def toggle_autostart(checked: bool) -> None:
         set_autostart(checked)
 
+    def open_release(release: Release) -> None:
+        QDesktopServices.openUrl(QUrl(release.open_url()))
+
+    def show_release(release: Release | None, announce: bool) -> None:
+        if release is None:
+            updates.setText("Vérifier les mises à jour")
+            if announce:
+                tray.showMessage(
+                    "Dictée locale",
+                    "Vous avez la dernière version.",
+                    QSystemTrayIcon.MessageIcon.Information,
+                    4000,
+                )
+            return
+        updates.setText(f"Mettre à jour vers {release.version}")
+        if announce:
+            tray.showMessage(
+                "Dictée locale",
+                f"La version {release.version} est disponible.",
+                QSystemTrayIcon.MessageIcon.Information,
+                8000,
+            )
+
+    def check_updates() -> None:
+        updates.setText("Recherche d'une mise à jour…")
+        checker.check(True)
+
+    def on_release(release: Release | None) -> None:
+        show_release(release, announce=checker.manual or release is not None)
+
+    def on_check_failed(_message: str) -> None:
+        if checker.release is None:
+            updates.setText("Vérifier les mises à jour")
+        if checker.manual:
+            tray.showMessage(
+                "Dictée locale",
+                "Impossible de vérifier les mises à jour.",
+                QSystemTrayIcon.MessageIcon.Warning,
+                4000,
+            )
+
     def quit_app() -> None:
         controller.shutdown()
         tray.hide()
         app.quit()
 
+    if checker.release is not None:
+        show_release(checker.release, announce=False)
     transcriber.ready.connect(mark_ready)
     dark_mode.toggled.connect(toggle_theme)
     autostart.toggled.connect(toggle_autostart)
+    updates.triggered.connect(
+        lambda: open_release(checker.release) if checker.release is not None else check_updates()
+    )
+    checker.ready.connect(on_release)
+    checker.failed.connect(on_check_failed)
     quit_action.triggered.connect(quit_app)
+    QTimer.singleShot(4000, checker.check)
     tray.show()
     controller.start()
     raise SystemExit(app.exec())

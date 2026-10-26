@@ -1,0 +1,41 @@
+name: Publication
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Code source
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Dépendances
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Installateur
+        shell: pwsh
+        run: |
+          $version = python -c "from version import APP_VERSION; print(APP_VERSION)"
+          python -m PyInstaller --noconfirm DicteeLocale.spec
+          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" installer.iss
+
+      - name: Release GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/DicteeLocale-Setup.exe
+          generate_release_notes: true

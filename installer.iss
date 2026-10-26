@@ -2,7 +2,9 @@
 
 #define AppName "Dictée locale"
 #define AppExe "DicteeLocale.exe"
+#ifndef AppVersion
 #define AppVersion "1.0.0"
+#endif
 
 [Setup]
 AppId={{8F4C2A71-6B1E-4D58-9C3A-7E2B5D91A046}

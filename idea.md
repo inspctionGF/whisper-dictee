@@ -8,7 +8,7 @@ Injection du texte : écriture dans le champ actif (simulation de frappe ou pres
 
 Choix techniques :
 
-Moteur : faster-whisper (Python) ou whisper.cpp (C++, léger, GPU via Vulkan/CUDA). Pour un résultat rapide, faster-whisper avec le modèle small ou medium.
+Moteur : faster-whisper (Python) oLa clé à bout.u whisper.cpp (C++, léger, GPU via Vulkan/CUDA). Pour un résultat rapide, faster-whisper avec le modèle small ou medium.
 Stack app : comme tu fais déjà de l’Electron, tu peux rester dessus (hotkey global, tray et popup sont natifs) et lancer whisper.cpp ou un serveur faster-whisper en sidecar. Sinon, Python + PySide6 est plus simple pour un prototype.
 Injection de texte : le plus fiable est de copier le texte dans le presse-papiers puis d’envoyer Ctrl+V (en restaurant l’ancien contenu après). La frappe simulée (SendInput) marche aussi mais gère mal les accents et caractères spéciaux.
 
