@@ -1,0 +1,21 @@
+{
+  "popup": {
+    "position": "bas-centre",
+    "largeur": 420,
+    "theme": "sombre",
+    "animations": true,
+    "afficher_aide": true,
+    "afficher_succes": true,
+    "opacite_fond": 0.86
+  },
+  "audio": {
+    "micro": "par-defaut",
+    "sons": false
+  },
+  "whisper": {
+    "modele": "large-v3",
+    "langue": "fr",
+    "initial_prompt": "Vocabulaire : implémentation, API, Electron, IGF, OmniLab."
+  },
+  "raccourci": "ctrl+alt+space"
+}

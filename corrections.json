@@ -1,0 +1,9 @@
+{
+  "prompt": "Vocabulaire : implémentation, API, base de données, Electron, faster-whisper, IGF, OmniLab, OBS, vMix.",
+  "hotwords": "implémentation API Electron faster-whisper IGF OmniLab OBS vMix",
+  "corrections": {
+    "\\bemblommeration\\b": "implémentation",
+    "\\bimplémentasion\\b": "implémentation",
+    "\\bimplementation\\b": "implémentation"
+  }
+}
